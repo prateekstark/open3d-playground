@@ -149,6 +149,7 @@ TEST(TriangleMesh, GetMinBound) {
     ExpectEQ(Eigen::Vector3d(19.607843, 0.0, 0.0), tm.GetMinBound());
 }
 
+
 TEST(TriangleMesh, GetMaxBound) {
     int size = 100;
 
@@ -454,6 +455,38 @@ TEST(TriangleMesh, ComputeVertexNormals) {
     tm.ComputeVertexNormals();
 
     ExpectEQ(ref, tm.vertex_normals_);
+}
+
+TEST(TriangleMesh, IdenticallyColoredConnectedComponents) {
+    Eigen::Vector3d RED(0, 0, 1);
+    Eigen::Vector3d GREEN(0, 1, 0);
+    Eigen::Vector3d BLUE(1, 0, 0);
+
+    //Hexagonal Structure with center at origin
+    Eigen::Vector3d A(-1, 1.7320508075688772, 0);      //0
+    Eigen::Vector3d B(1, 1.7320508075688772, 0);       //1
+    Eigen::Vector3d C(-2, 0, 0);                       //2
+    Eigen::Vector3d D(0, 0, 0);                        //3
+    Eigen::Vector3d E(2, 0, 0);                        //4
+    Eigen::Vector3d F(-1, -1.7320508075688772, 0);     //5
+    Eigen::Vector3d G(1, -1.7320508075688772, 0);      //6
+
+    std::vector<Eigen::Vector3d> vertices{A, B, C, D, E, F, G};
+    geometry::TriangleMesh tm;
+
+    tm.vertices_.insert(tm.vertices_.end(), std::begin(vertices), std::end(vertices));
+    tm.triangles_ = {Eigen::Vector3i(0, 2, 3), Eigen::Vector3i(0, 3, 1),
+                     Eigen::Vector3i(1, 3, 4), Eigen::Vector3i(2, 5, 3),
+                     Eigen::Vector3i(3, 5, 6), Eigen::Vector3i(3, 6, 4)};
+
+    tm.vertex_colors_ = {RED, GREEN, BLUE, RED, GREEN, RED, RED};
+    auto connected_components = tm.IdenticallyColoredConnectedComponents();
+    // Component1
+    EXPECT_TRUE(connected_components[0] == std::list<int>({0, 3, 5, 6}));
+    // Component2
+    EXPECT_TRUE(connected_components[1] == std::list<int>({1, 4}));
+    // Component3
+    EXPECT_TRUE(connected_components[2] == std::list<int>({2}));
 }
 
 TEST(TriangleMesh, ComputeAdjacencyList) {
