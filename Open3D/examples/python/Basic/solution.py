@@ -32,3 +32,4 @@ if __name__ == "__main__":
         print()
         result_file.write("\n")
     result_file.close()
+    print("Successfully written result file: result.txt")
